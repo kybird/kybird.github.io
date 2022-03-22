@@ -3,9 +3,10 @@ layout: post
 title: GateServer
 date: 2022-03-17T13:53:54.026Z
 category: Skynet
-lastmod: 2022-03-17T14:14:53.864Z
+lastmod: 2022-03-22T14:10:01.567Z
 ---
 
+# GateServer
 网关服务 (GateSever) 是游戏的接入层, 基本功能是管理客户端的连接, 分割完整的数据包, 转发给逻辑处理服务.
 
 GateServer is the access layer of a game server and the basic functionalities are managing client connections, unpacking data packages, redirecting them to the logic layer.
