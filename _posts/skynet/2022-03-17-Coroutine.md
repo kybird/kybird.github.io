@@ -20,6 +20,8 @@ localcoroutine =require"skynet.coroutine"
 
 Localcoroutine = require "skynet.coroutine"
 
+debug console. 
+
 该模块增加了一个 API ：
 In this module, a new API gets added:
 이모듈에는 새로운 API 가 추가되었다.
