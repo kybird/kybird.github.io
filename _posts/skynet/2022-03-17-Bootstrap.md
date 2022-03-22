@@ -3,7 +3,7 @@ layout: post
 title: Bootstrap
 date: 2022-03-17T13:53:54.026Z
 category: Skynet
-lastmod: 2022-03-17T13:57:26.835Z
+lastmod: 2022-03-22T14:24:51.213Z
 ---
 
 
@@ -13,17 +13,17 @@ skynet 由一个或多个进程构成，每个进程被称为一个 skynet 节�
 Skynet is consist of one or multiple processes, each process is called a Skynet node. This section is about the starting flow of the Skynet nodes.
 Skynet 은 한 개나 다수의 프로세스로 이루어진다, 각 프로세스는 skynet 노드라 불린다. 이장에서는 skynet 노드들의 시작과정에대해 이야기한다.
 
-skynet 节点通过运行 skynet 主程序启动，必须在启动命令行传入一个 Config 文件名作为启动参数。skynet 会读取这个 config 文件获得启动需要的参数。
+skynet 节点通过运行 skynet 主程序启动，必须在启动命令行传入一个 [Config](2022-03-17-Config.md) 文件名作为启动参数。skynet 会读取这个 config 文件获得启动需要的参数。
 
-Skynet node is invoked by Skynet's main process, it has to be started by a Config file as running parameters. Skynet read this config file to get the running parameters.
+Skynet node is invoked by Skynet's main process, it has to be started by a [Config](2022-03-17-Config.md) file as running parameters. Skynet read this config file to get the running parameters.
 
-Skynet 노드는 Skynet의 메인프로세스에의해 호출된다. 노드는 Config 파일들로 실행파라메터들이 설정되어야한다 skynet 은 이 config 파일을 읽어서 실행파라메터들을 가져온다.
+Skynet 노드는 Skynet의 메인프로세스에의해 호출된다. 노드는 [Config](2022-03-17-Config.md) 파일들로 실행파라메터들이 설정되어야한다 skynet 은 이 config 파일을 읽어서 실행파라메터들을 가져온다.
 
-第一个启动的服务是 logger ，它负责记录之后的服务中的 log 输出。logger 是一个简单的 C 服务，skynet_error 这个 C API 会把字符串发送给它。在 config 文件中，logger 配置项可以配置 log 输出的文件名，默认是 nil ，表示输出到标准输出。
+第一个启动的服务是 logger ，它负责记录之后的服务中的 log 输出。logger 是一个简单的 C 服务，`skynet_error` 这个 C API 会把字符串发送给它。在 config 文件中，logger 配置项可以配置 log 输出的文件名，默认是 nil ，表示输出到标准输出。
 
-The first started service is logger, it's handling the output of services log. logger is a simple C service and a C API called skynet_error sends strings to it. In the config file, logger config entry can be set to the log file name, and it defaults to nil, which means standard output.
+The first started service is logger, it's handling the output of services log. logger is a simple C service and a C API called `skynet_error` sends strings to it. In the config file, logger config entry can be set to the log file name, and it defaults to nil, which means standard output.
 
-첫번째시작된서비스는 logger, 서비스의 로그를 관리한다. Logger 는 간단한 C서비스이고 skynet_error 라는 C API 로 로거에 문자열을 전송한다. Config 파일에서 logger config 엔트리는 log 파일이름으로 설정될수있고 기본은 nil 이고 이것은 표준 output 이다.
+첫번째시작된서비스는 logger, 서비스의 로그를 관리한다. Logger 는 간단한 C서비스이고 `skynet_error` 라는 C API 로 로거에 문자열을 전송한다. Config 파일에서 logger config 엔트리는 log 파일이름으로 설정될수있고 기본은 nil 이고 이것은 표준 output 이다.
 
 
 bootstrap 这个配置项关系着 skynet 运行的第二个服务。通常通过这个服务把整个系统启动起来。默认的 bootstrap 配置项为 "snlua bootstrap" ，这意味着，skynet 会启动 snlua 这个服务，并将 bootstrap 作为参数传给它。snlua 是 lua 沙盒服务，bootstrap 会根据配置的 luaservice 匹配到最终的 lua 脚本。如果按默认配置，这个脚本应该是 service/bootstrap.lua 。
@@ -37,7 +37,7 @@ Bootstrap 설정은 skynet 의 두번째 시작되는 서비스에 대한것이�
 You don't need to change the bootstrap config entry to make the default bootstrap script work unless it's necessary. The bootstrap script is as follows:
 
 만약당신이 bootstrap 설정 엔트리를 바꿀필요가 없다면 현재 bootstrap 의 스크립트는 아래와같다.
-
+```lua
 local skynet = require "skynet"
 local harbor = require "skynet.harbor"
 
@@ -81,6 +81,7 @@ skynet.start(function()
 	pcall(skynet.newservice,skynet.getenv "start" or "main")
 	skynet.exit()
 end)
+```
 这段脚本通常会根据 standalone 配置项判断你启动的是一个 master 节点还是 slave 节点。如果是 master 节点还会进一步的通过 harbor 是否配置为 0 来判断你是否启动的是一个单节点 skynet 网络。
 
 This script will check if you want to start a master node or slave node based on standalone config entry. If it's a master node, it'll make a decision on whether to start a single node Skynet network or not by checking if harbor config entry is 0.
@@ -99,16 +100,16 @@ In multiple-node mode, the master node starts cmaster service as coordinator of 
 
 만약 다중노드모드라면, 마스터노드는 cmaster 라는 서비스를 노드들의 관리자로 시작한다. 더하여 마스터를 포함하여 각노드들은 cslave 서비스를 실행해야한다.  이서비스는 노드들간의 전역이름을 동기화하고 노드들간의 메시지를 전달하는데 사용된다.
 
-接下来在 master 节点上，还需要启动 DataCenter 服务。
+接下来在 master 节点上，还需要启动 [DataCenter](2022-03-17-DataCenter.md) 服务。
 
 Next, the master node also needs to run DataCenter service.
 
-다음은 마스터노드는 또한 DataCenter 서비스를 실행해야한다
+다음은 마스터노드는 또한 [DataCenter](2022-03-17-DataCenter.md) 서비스를 실행해야한다
 
 然后，启动用于 UniqueService 管理的 service_mgr 。
 
 Next, service_mgr will be start as service_mgr to manage UniqueService .
-그리고  UniqueService 를 관리하기위한 server_mgr 을 시작한다.
+그리고  [UniqueService](2022-03-17-UniqueService.md) 를 관리하기위한 server_mgr 을 시작한다.
 
 最后，它从 config 中读取 start 这个配置项，作为用户定义的服务启动入口脚本运行。成功后，把自己退出。
 
