@@ -2,7 +2,7 @@
 layout: post
 title: Bootstrap
 date: 2022-03-17T13:53:54.026Z
-category: skynet
+category: Skynet
 lastmod: 2022-03-24T16:14:47.965Z
 ---
 
@@ -16,6 +16,7 @@ bootstrap 설정항목은 skynet 의 두번째 시작되는 서비스에 대한 
 <BR>
 필요 없다면,  bootstrap 설정 값을 변경할 필요가 없으며, 기본값인 bootstrap을 동작하게 한다, 현재 bootstrap 의 스크립트는 아래와같다.  
 <BR>
+
 ```lua
 local skynet = require "skynet"
 local harbor = require "skynet.harbor"
