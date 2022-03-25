@@ -3,7 +3,7 @@ layout: post
 title: DebugConsole
 date: 2022-03-17T13:53:54.026Z
 category: Skynet
-lastmod: 2022-03-17T14:14:55.675Z
+lastmod: 2022-03-25T13:59:55.610Z
 ---
 
 스카이넷은 내장 디버그콘솔을 가지고 잇다. 기동 스크립트에서 기동해야한다
@@ -70,28 +70,19 @@ n       1
   
 * kill address 루아서비스 종료를 강제한다
   
-* info address 让一个 lua 服务汇报自己的内部信息，参见 Profile 。
-* info address make a Lua service report its own internal info, see Profile.
-* info address 는 루아서비스가 자신의 정보를 리포트하도록한다 Profile 참조하라
+* info address lua 서비스가 자신의 내부정보를 보고하도록한다. 참고 [Profile](2022-03-17-Profile.md)
   
-* signal address sig 向服务发送一个信号，sig 默认为 0 。当一个服务陷入死循环时，默认信号会打断正在执行的 lua 字节码，并抛出 error 显示调用栈。这是针对 endless loop 的 log 的有效调试方法。注：这里的信号并非系统信号。
-* signal address sig sends a single to service, sig defaults to 0. when a service has an infinite loop, the default signal will terminate Lua binary code, and raise an error with the call stack. This is the best way to debug the log of endless loops. Note: the signal here is not the same thing as the system signal.
-* Signal address sig 서비스에개 한개의메시지 sig를 전송한다 sig기본값은0이다. 섭스가 무한루프에들어갈시 기본 시그날은 루아의 바이너리코드를 정지한다. 그리고 콜스택과 함께 에러를 발생한다. 이것은 endless loop 를 디버깅하는 최선의 방법이다 주: 여기의시그날은 시스템의 시그날과 같은것이 아니다.
-* task address 显示一个服务中所有被挂起的请求的调用栈。
-* task address shows the call stack of all pending requests from a specified service.
-* Task address 명시한서비스의 모든 대기중요청의 콜스택을 보여준다
-* debug address 针对一个 lua 服务启动内置的单步调试器。 http://blog.codingnow.com/2015/02/skynet_debugger.html
-* debug address enables an enbeded single debugger for a specified Lua service.
-* Debug address  명시한 루아서비스에 단일 디버그를 활성화한다
-* logon/logoff address 记录一个服务所有的输入消息到文件。需要在 Config 里配置 logpath 。
-* logon/logoff address record all input messages to a file. logpath needs to be set in Config.
-* Logon/logoff address 는 모든 입력메시지들을 파일로 기록한다 logpath 는 Config 에 설정해야한다
-* inject address script 将 script 名字对应的脚本插入到指定服务中运行（通常可用于热更新补丁）。
-* inject address script run script file on specified service. (usually, it's used for hot patches).
-* Inject address script 는 script 이름에 해당하는 스크립트를 지정한 서비스에 삽입하여실행한다 (핫패치시에 사용된다)
-* call address 调用一个服务的lua类型接口，格式为: call address "foo", arg1, ... 注意接口名和string型参数必须加引号,且以逗号隔开, address目前支持服务名方式。
-* call address call Lua interface of a service. the format is: call address "foo", arg1, ..., Note the interface name and string type must be quoted and split by ",", address supports service name.
-* Call address 는 서비스의 루아인터페이스를 호출한다. 포맷은 call Address "foo", arg1,…인터페이스 이름과 문자열형식은 따옴표를 사용해야하며 , 로 나누어져야한다 주소는 서비스이름을 지원한다
+* Signal address sig 서비스에 메시지를 전송한다, sig의 기본값은 0이다. 서비스가 무한루프에 진입 했을때, 기본 시그널은 루아의 바이너리코드를 종료한다. 그리고 콜스택과 함께 에러를 발생한다. 이는 endless loop 를 디버깅하는 최선의 방법이다 주: 여기의 시그널은  시스템의 시그널과 같은것은 아니다.  
+
+* Task address 서비스중 모든 정지된 요청의 콜스택을 표시한다.  
+
+* debug address  명시한 lua 서비스에 내장된 single 디버거를 기동한다. http://blog.codingnow.com/2015/02/skynet_debugger.html
+
+* Logon/logoff address 서비스의 모든 입출력 메시지를 파일로 기록한다. Config 에 logpath 항목을 설정해야 한다.
+
+* Inject address script script 이름에 해당하는 스크립트를 지정한 서비스에 삽입하여실행한다 (핫패치시에 사용된다)
+
+* Call address 서비스의 루아 인터페이스를 호출한다. 포맷은 call Address "foo", arg1,… 인터페이스 이름과 문자열형식은 따옴표를 사용해야하며 , 로 나누어져야한다 주소는 서비스이름을 지원한다
 	
 	
 출처: <https://github.com/cloudwu/skynet/wiki/DebugConsole> 
