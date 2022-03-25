@@ -3,7 +3,7 @@ layout: post
 title: GateServer
 date: 2022-03-17T13:53:54.026Z
 category: Skynet
-lastmod: 2022-03-22T14:10:01.567Z
+lastmod: 2022-03-25T15:46:56.800Z
 ---
 
 # GateServer
@@ -44,9 +44,7 @@ function handler.disconnect(fd)
 function handler.error(fd, msg)
 ```
 
-当一个连接异常（通常意味着断开），error 被调用，除了 fd ，还会拿到错误信息 msg（通常用于 log 输出）。
-error will be called when there is an exception (which usually means disconnect). Besides fd, you'll get an error message: msg (for logging purpose).
-연결이상시(통상예상외 연결해제), error 가 호출된다. fd 를 제외하고, 오류정보 msg도 얻을수있다(통상 로그 출력에사용)  
+연결이상시(통상 예상외 연결 해제), error 가 호출된다. fd 외에도, 오류정보 msg도 얻을수있다(로그 출력에사용)  
 
 ```lua
 function handler.command(cmd, source, ...)
@@ -83,10 +81,8 @@ fd 에서 발송대기중인 데이터가 누적 1M 바이트가 넘을때, 이�
 gateserver.openclient(fd)   -- allow fd receive message
 ```
 
-
-每次收到 handler.connect 后，你都需要调用 openclient 让 fd 上的消息进入。默认状态下， fd 仅仅是连接上你的服务器，但无法发送消息给你。这个步骤需要你显式的调用是因为，或许你需要在新连接建立后，把 fd 的控制权转交给别的服务。那么你可以在一切准备好以后，再放行消息。
-Every time you received handle.connect, you'll need to call openclient and allow messages in from fd. By default, fd only connects the server but doesn't allow sending messages. It's required to call this function explicitly because you may want to pass the controller of fd to other services when a connection is established. In that case, you can allow messages in after everything is ready.
-Handle.connect 를 받는 매번, openclient를 호출하여 fd 로부터의 메시지들이 들어오도록한다. 기본상태는 아래와같다, fd 는 서버에대한 연결이지만, 메시지를 발송할 방법이 없다. 명시적으로 이를  시지들의 진입을 허가할 필요가있다. 기본적으로 fd 는 오직 서버로의 연결일뿐 메시지들을 전달할수없다. 이 단계에서 명시적으로 호출이 필요한것은, 새로운 연결이 만들어진후,  fd의 통제권을 다른 서비스에 넘겨줘야하기 떄문이다. 명시적으로이함수를 호출할필요가있다. 왜냐하면 연결이 성립했을때 fd 의 컨트롤을 다른서비스로 전달해야하기 때문이다. 모든 준비가 끝난후, 다시 메시지를 발행한다. (??????? 이상해 이상해 ????)
+Handle.connect 를 받는 매번, openclient를 호출하여 fd 로부터의 메시지들이 들어오도록 한다. 기본상태에서, fd 는 서버에대한 연결이지만, 메시지를 발송할 방법이 없다. 명시적으로 이 함수르를  메시지들의 진입을 허가할 필요가있다. 기본적으로 fd 는 오직 서버로의 연결일뿐 메시지들을 전달할수없다. 명시적으로 이 함수를 호출해야 하는 이유는, 새로운 연결이 만들어진후,  fd의 통제권을 다른 서비스에 넘겨주고 싶을 수 있기 때문이다.  그럴경우, 모든 준비가 끝난후, 메시지들을 허용할 수있다.
+> 역주 써바야 공감이 갈까. 잘모르겠음
 
 
 ``` lua
@@ -103,10 +99,13 @@ gateserver.closeclient(fd) -- close fd
 
 모든 패키지는 2개바이트 + 데이터 내용이다.  이 2바이트는 Big-Endian 인코딩되있다. 데이터내용의 크기는 임의이다.  
 
-所以，单个数据包最长不能超过 65535 字节。如果业务层需要传输更大的数据块，请在上层业务协议中解决。
-So, every single data package cannot exceed 65535 bytes. If you need to transfer a large data package, please resolve it in in the feature layer .
-그래서 하나의 데이터 패키지는 최장 65535 바이트를 넘을수 없다. 만약 로직층에서 더큰 데이터조각의 전송이 필요하다면, 로직 프로토콜 상층에서 해결하라  
-(????? 로직층에서하라는건지 그위층??어딘지는모르겠지만 해결하라는건지 모르겠다 ????)
+> 所以，单个数据包最长不能超过 65535 字节。如果业务层需要传输更大的数据块，请在上层业务协议中解决。 
+> So, every single data package cannot exceed 65535 bytes. If you need to transfer a large data package, please resolve it in in the feature layer.  
+> 중문번역: 그래서, 단일한 데이터 패키지의 최장 길이는 65535 바이트를 넘지 못한다. 만약 로직층이 더 큰데이터 조각의 전송이 필요하다면, 상층 로직 프로토콜에서 해결하라.  
+> 영문번역: 그래서 모든 싱글 데이터 패키지는 65535 바이트를 넘을 수 없다. 만약 큰 데이터 패키지의 전송이 필요하다면, 기능 레이어에서 해결하라.  
+> > 역주 번역불가.   
+> ??? 로직층에서 하라는건지 그위층에서 하라는건지 모르겠다 그위층은 어디인가?  
+> 영어는 기능층이라는데 기능층이 로직층인가?  
 
 스카이넷은 데이터 디코딩 처리를 위해 netpack 라이브러리를 제공한다. 위치는 Lua-netpack.c 이다. netpack  은 package 포맷에 의거하여 unpack 처리한다. netpack.filter(queue, msg, size) API, 는 타입값("data", "more", "error", "open", "close")을 반환한다. 이것은 IO 이벤트를 대표한다, 그외의 반환값들은 각 이벤트에 필요한 파라메터들이다.  
 
