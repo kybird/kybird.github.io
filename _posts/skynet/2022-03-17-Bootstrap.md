@@ -84,3 +84,4 @@ end)
 이 start 설정항목은, 유저가 정의한 기동 스크립트이며, 기본값은 main 이다. 만약 당신이 skynet을 그저 테스트 하려고 한다면, 여러 개의 시작 스크립트를 가지고 있을 것이다,  그렇다면 여러 개의 config 함수를 만들어, 각설정파일에 서로 다른 start 항목을 정의하는 것을 추천한다, examples 디렉토리에는 아주 많은 이러한 예제가 있다.  
 <BR>
 
+출처: <https://github.com/cloudwu/skynet/wiki/Bootstrap> 
