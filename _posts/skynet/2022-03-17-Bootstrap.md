@@ -12,7 +12,7 @@ skynet 노드는 skynet의 메인 프로세스에 의해 기동 된다. 기동 �
 <BR>
 첫번째 시작되는 서비스는 logger이며, 서비스의 로그를 관리하며 이후의 로그를 출력한다. logger 는 간단한  C서비스이고, skynet_error 라는 C API 로 logger에 문자열을 전송한다. config 파일에서 logger 항목에 log 파일명을 지정할 수 있으며, 기본값은 nil이며 이는 stdout 을 의미한다.  
 <BR>
-bootstrap 설정항목은 skynet 의 두번째 시작되는 서비스에 대한 것이다. 전체시스템은 이 서비스에 의해 시작된다. bootstrap 의 기본값은 'snlua bootstrap' 이다.  이는 skynet이 snlua라는 서비스를 실행하며 bootstrap 을 파라메터로 준다는 뜻이다.  snlua 는 lua의 샌드박스 서비스이며, bootstrap 은 luaservice 설정값에 의거하여  해당이름의 스크립트를칮아낼것이다.  기본설정에 의하면, 이 스크립트의 위치는 service/bootstrap.lua 이다.  
+bootstrap 설정항목은 skynet 의 두번째 시작되는 서비스에 대한 것이다. 전체시스템은 이 서비스에 의해 시작된다. bootstrap 의 기본값은 `snlua bootstrap` 이다.  이는 skynet이 snlua라는 서비스를 실행하며 bootstrap 을 파라메터로 준다는 뜻이다.  snlua 는 lua의 샌드박스 서비스이며, bootstrap 은 luaservice 설정값에 의거하여  해당이름의 스크립트를칮아낼것이다.  기본설정에 의하면, 이 스크립트의 위치는 service/bootstrap.lua 이다.  
 <BR>
 필요 없다면,  bootstrap 설정 값을 변경할 필요가 없으며, 기본값인 bootstrap을 동작하게 한다, 현재 bootstrap 의 스크립트는 아래와같다.  
 <BR>
