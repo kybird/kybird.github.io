@@ -2,7 +2,7 @@
 layout: post
 title: GateServer
 date: 2022-03-17T13:53:54.026Z
-category: skynet
+category: Skynet
 lastmod: 2022-03-22T14:10:01.567Z
 ---
 
