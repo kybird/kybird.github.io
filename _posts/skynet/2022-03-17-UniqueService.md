@@ -47,4 +47,4 @@ DataCenter 와 다르게, uniqueservice 는 서비스관리전용 모듈이다. 
 
 
 
-
+출처: <https://kybird.github.io/skynet/2020/01/02/UniqueService.html> 
