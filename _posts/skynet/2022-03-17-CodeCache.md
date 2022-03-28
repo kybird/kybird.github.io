@@ -23,7 +23,7 @@ lastmod: 2022-03-22T15:05:57.374Z
 
 This feature is implicit to most users. It changes the auxiliary API luaL_loadfilex, it will affect all direct calls or indirect calls. For example, loadfile, require, etc. It uses the file name as the key, once it finds the same Lua file has been loaded, it will load the existing prototype and replace it. Note: Luas function is consists of prototypes and 0 or more upvalue bindings.
 
-이특성의 사용은, 일반 유저에게 명시적이지 않다. lua의 보조 API luaL_loadfilex 를 변경하였다, 모든 직간접으로 이 API 를 호출하는 모두 영향을 미친다. 예로: loadfile, require 등. 이들은 파일이름을 key로 사용하여, 일단 같은 이름의 lua파일이 로딩된것을 찾아내면, 메모리에서 이전의 함수원형을 대체해버린다. 주: lua 함수는 함수원형과 0 이나 다수의 upvalue 바인딩으로 이루어져있다.  
+이특성의 사용은, 일반 유저에게 명확하지 않다. lua의 보조 API luaL_loadfilex 를 변경하였다, 모든 직간접으로 이 API 를 호출하는 모두 영향을 미친다. 예로: loadfile, require 등. 이들은 파일이름을 key로 사용하여, 일단 같은 이름의 lua파일이 로딩된것을 찾아내면, 메모리에서 이전의 함수원형을 대체해버린다. 주: lua 함수는 함수원형과 0 이나 다수의 upvalue 바인딩으로 이루어져있다.  
 
 ---
 
@@ -86,4 +86,7 @@ API 파라메터가 공백이면, 현재 모드를 리턴한다.
 > 
 > 처음하면 캐쉬되고 두번째는 괜찮다는말인가..먼소리인가..기본값이 ON 이면 호출안해도 항상 캐쉬되는거 아니냐?  
 > 
-> 
+
+출처: <https://github.com/cloudwu/skynet/wiki/CodeCache> 
+
+
