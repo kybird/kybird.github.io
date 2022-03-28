@@ -44,3 +44,6 @@ end
 
 https://github.com/cloudwu/skynet/blob/master/test/testselect.lua#L72-L79
 
+출처: <https://github.com/cloudwu/skynet/wiki/TimeOutCall> 
+
+
