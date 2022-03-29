@@ -111,12 +111,10 @@ padding 은 이후에 메시지의 뒷부분이 더있는지를 표명한다.
 만약응답메시지가 다수의 잛은 메시지의 합성이라면. channel:request 는 하나의 테이블을 반환한다, 안에는 모든 짧은 메시지의 내용이 있고, 호출가가 이 짧은 메시지를 연결해야한다.
 
 # 예비주소 
-如果你想在无法连接指定的 ip 地址时,让 channel 尝试连接备用地址,可以创建 channel 对象时,给出 backup 表.这是一个数组,每一项是一个地址.
+
 만약 연결하고자한 지정한 IP 주소에 연결하지 못할시, channel이 예비주소에 연결을 시도하게 할수 있으며, channel 객체를 생성할때, backup 표를 줄 수 있다. 여기서 한개의 숫자그룹, 각각의 항은 모두 주소이다.
 
 이것은 mongo 의 클러스터 모드의 설계를 위한것이다, 그러니 행위와 mongo 의 클러스터 연결을 동일하다.
-
-它是为 mongo 的集群模式设计的,所以行为和 mongo 的集群连接一致.
 
 # 오버로드 통지
 
@@ -127,11 +125,8 @@ channel 객체를 생성할때 function overload(isOverload) 를 넘겨주어 ov
 
 skynet 은 redis, mongo, mysql 등 데이터베이스 기동은 모두 과부하 콜백을 지원한다.
 
-关于 socket channel 的具体用法除了阅读 lualib/socketchannel.lua （同时这也是理解 socket 模块的好材料）的实现外,也可以阅读 lualib/redis.lua 和 lualib/mongo.lua 这两个为 skynet 编写的数据库 driver .
 
 socket channel 의 구체사용법은 lualib/socketchannel.lua (동시에 socket 모듈이해에 도움이됨) 의 구현외에, lualib/redis.lua 와 lualib/mongo.lua 이 두개의 skynet 으로 쓰여진 데이터베이스 driver 를 참고하자
 
 
-출처: <https://github.com/cloudwu/skynet/wiki/SocketChannel> 
-
-
+출처: <https://github.com/cloudwu/skynet/wiki/ExternalService> 
