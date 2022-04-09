@@ -6,94 +6,127 @@ category: Skynet
 lastmod: 2022-03-17T14:19:58.944Z
 ---
 
-请求回应模式是和外部服务交互时所用到的最常用模式之一。通常的协议设计方式有两种。
 
-每个请求包对应一个回应包，由 TCP 协议保证时序。redis 的协议就是一个典型。每个 redis 请求都必须有一个回应，但不必收到回应才可以发送下一个请求。
+요청응답모드는 외부서비스와 상호작용시  모두 사용되는 제일 일반적으로 사용되는 모드들중 하나이다. 일반적으로 프로토콜의 설계 방식은 두개이다.
 
-发起每个请求时带一个唯一 session 标识，在发送回应时，带上这个标识。这样设计可以不要求每个请求都一定要有回应，且不必遵循先提出的请求先回应的时序。MongoDB 的通讯协议就是这样设计的。
+1. 모든 요청패키지에 대응하는 하나의 응답패키지, tcp프로토콜이 시간순서를 보장한다. redis 의 프로토콜이 전형적인 예이다, 하지만 응답을 받을 필요가 없어질 때만 다음 요청을 계속 발송할 수 있다.
 
-对于第一种模式，用 skynet 的 Socket API 很容易实现，但如果在一个 coroutine 中读写一个 socket 的话，由于读的过程是阻塞的，这会导致吞吐量下降（前一个回应没有收到时，无法发送下一个请求）。
+2. 모든 요청을 시작할때 유일한session 표식을 달려있다, 발송 응답시, 이 표식을 달아준다. 이러한 설계는 모든 요청이 꼭 응답이 필요하지는 않게 할수 있다, 게다가 먼저 받은 요청을 먼저 응답할 필요가 없어진다. MongDB 의 통신 프로토콜이 이렇게 설계 되어있다.
 
-对于第二种模式，需要用 skynet.fork 开启一个新线程来收取回应包，并自行和请求对应起来，实现比较繁琐。
+첫 번째 모드에서는, skynet의 Socket API로 구현하기 쉽지만, coroutine에서 socket을 읽으면, 읽는 과정이 블럭돼기 때문에, 처리량이 떨어진다.. (이전 응답을 받지 못했을 때, 다음 요청전송불가)
 
-所以、skynet 提供了一个更高层的封装：socket channel 。
+두 번째 모드에서는, skynet.fork 를 사용하여 새로운 스레드를 기동하여 응답을 받도록 해야하며, 스스로 요청에 대응해야하며, 구현하기 비교적 번거롭다.
 
+그래서, skynet 은 고수준레벨에 WRAPPER인 socket channel 을 제공한다.
+
+```lua
 local sc = require "skynet.socketchannel"
 
 local channel = sc.channel {
   host = "127.0.0.1",
   port = 3271,
 }
-这样就可以创建一个 channel 对象出来，其中 host 可以是 ip 地址或者域名，port 是端口号。
+```
 
-接下来，我们就可以工作在模式 1 下了:
+이렇게 channel 객체를 생성하였다, 이중 host 는 ip 주소나 DNS 이름일수 있다, port 는 포트 이다.
 
+이리하여, 모드1에서 작업을 할수 있다:
+
+```lua
 local resp = channel:request(req [, response[, padding]])
-这里，req 是一个字符串，即请求包。response 是一个 function ，用来收取回应包。返回值是一个字符串，是由 response 函数返回的回应包的内容（可以是任意类型）。response 函数需要定义成这个样子：
+```
 
+
+여기, req 는 문자열이다. 즉 요청패키지이다. response 는 함수이며, 응답패키지를 받는데 사용된다. 반환값은 문자열이다, response 함수의 응답패키지 내용이 문자열이기 때문이다. response 함수는 아래모양처럼 정의 해야한다.
+```lua
 function response(sock)
   return true, sock:readline()
 end
-sock 是由 request 方法传入的一个对象，sock 有两个方法：read(self, sz) 和 readline(self, sep) 。read 可以读指定字节数；readline 可以读以 sep 分割（默认为 \n）的一个字符串（不包含分割符）。
+```
 
-response 函数的第一个返回值需要是一个 boolean ，如果为 true 表示协议解析正常；如果为 false 表示协议出错，这会导致连接断开且让 request 的调用者也获得一个 error 。
+sock 은 request 로 입력된 하나의 객체이며, sock 은 두개의 메서드 read(self, sz) 와 readline(self, sep)를 가지고있다. read 는 지정한 바이트수를 읽어온다; readline 은 sep(기본값 "\n")로 분할한 하나의 문자열을 가져온다.(분할자 자체는 포함하지 않는다).
 
-在 response 函数内的任何异常以及 sock:read 或 sock:readline 读取出错，都会以 error 的形式抛给 request 的调用者。
+response 함수의 첫번째 응답값은 boolean 이 필요하다, true 일경우 프로토콜 디코딩이 정상임을 의미하고, false 일경우 프로토콜에 오류가 있음을 의미한다.
 
-如果协议模式是第 2 种情况，那么你需要在 channel 创建时给出一个通用的 response 解析函数。
+response 함수내 어떠한 이상 그리고 sock:read 나 sock:readline 가 오류가 발생하면, 모두 error 형식으로 request 한 호출자에게 주어야한다.
 
+---
+
+만약 프로토콜모드가 2번째 종류인 상황이라면, channel 을 생성할때 하나의 통용할수 있는 response decode 함수를 제공해야한다.
+
+```lua
 local channel = sc.channel {
   host = "127.0.0.1",
   port = 3271,
   response = dispatch,
 }
-这里 dispatch 是一个解析回应包的函数，和上面提到的模式 1 中的解析函数类似。但其返回值需要有三个。第一个是这个回应包的 session，第二个是包是否解析正确（同模式 1 ），第三个是回应内容。
+```
 
-socket channel 就是依靠创建时是否提供 response 函数来决定工作在模式 1 还是模式 2 下的。
+여기 dispatch 는 응답패킷의 디코딩 함수이며, 위에서 말한 모드1에서 디코딩함수와 비슷하다. 하지만 반환값은 세개이다. 첫번째는 응답패킷의 session, 두번째는 디코딩정상여부(동모드 1), 세번째는 응답내용이다.
 
-在模式 2 下，request 的参数有所变化。第 2 个参数不再是 response 函数（它已经在创建时给出），而是一个 session 。这个 session 可以是任意类型，但需要和 response 函数返回的类型一致。socket channel 会帮你匹配 session 而让 request 返回正确的值。
 
-channel:close() 可以关闭一个 channel ，通常你可以不必主动关闭它，gc 会回收 channel 占用的资源。
+socket channel 은 생성할때 제공한 response 함수에 의존하여 동작모드가 1인지 2인지 결정하게 된다.
+모드 2일때, request 의 파라메터는 모두 변화한다. 제 2번째 파라메터는 더이상 response 함수(이미생성시 주어짐) 가 아니고, session 이 된다. 이 session 은 어떠한형식이든 될수 있다, 하지만 response 함수가 반환하는 형식과 동일해야한다. socket channel 은 session 값이 request 반환값이 올바른지 도와줄 것이다.
 
-socket channel 在创建时，并不会立即建立连接。如果你什么都不做，那么连接建立会推迟到第一次 request 请求时。这种被动建立连接的过程会不断的尝试，即使第一次没有连接上，也会重试。
 
-你也可以主动调用 channel:connect(true) 尝试连接一次。如果失败，抛出 error 。这里参数 true 表示只尝试一次，如果不填这个参数，则一直重试下去。
+channel:close() 채널을 닫는다, 통상 능동적으로 닫을 필요가 없고, gc 가 channel 이 점유한 자원을 회수할것이다.
 
-由于连接可能发生在任何 request 之前（只要前一次操作检测到连接是断开状态就会重新发起连接），所以 socket channel 支持认证流程，允许在建立连接后，立刻做一些交互。如果开启这个功能，需要在创建 channel 时，填写一个 auth 函数。和 response 函数一样，会给它传入一个 channel 对象。auth 函数不需要返回值，如果认证失败，在 auth 函数中抛出 error 即可。
+---
 
-由于对端有可能在任何时候断开连接, 所以任何一次 request 都有可能抛出 error 而失败，socket channel 将在下一次 request 时重新建立连接。注意：重连并不会重发过去发生 error 的请求，连接断开并不是隐藏在内部的。所以，如果有必要，你应该在请求失败时，业务层重新提出请求。
+socket channel 생성시에, 바로 연결이 생성되지 않는다. 만약 아무것도 하지 않는다면, 연결의 생성은 첫번째 요청이 있을때까지 지연되게 된다. 이러한 수동적 연결생성의 과정은 끊임없이 시도되며, 처음에 연결되지 않았더라도, 계속 다시 시도할것이다.
 
-socket channel 也可用于仅发包而不接收回应。只需要在 request 调用时不填写 response 即可。
+능동적으로 channel:connect(true) 를 호출하여 연결을 한번 시도할수 있다. 만약 실패하면 error 를 던진다. 여기 파라메터 true 는 한번만 시도함을 의미한다, 만약 이 파라메터를 주지 않으면, 계속해서 연결을 시도할 것이다.
 
-channel:response 则可以用来单向接收一个包。
+연결은 어떠한 request 전에(오직 직전의 동작이 연결이 끊어진 상태라는걸 감지하면 재연결을 시작할 수 있다), 그러니 socket channel 은 인증과정을 지원하며, 연결후 , 바로 상호작용을 허용한다. 만약 이기능을 활성화했다면 channel생성시, response 함수와 동일한 auth 함수를 추가해야한다.이 함수는 channel 객체를 입력받을수 있다. auth 함수는 반환값이 필요없으며, 만약 인증이 실패하면, auth 함수내에서 error 를 던지기만 하면된다.
 
+---
+
+어떠한 상황에서도 연결이 끊어질수 있기 때문에, 어떠한 한번의 request 모두 error 를 던지고 실패할수 있으며, socket channel 은 다음한번의 request 시 연결 생성을 재시도한다. 주의: 재연결은  이미발생한 error 의 요청을 다시 시도하지 않는다, 연결이 끊어짐은 내부에 숨겨진것이 아니다. 그러니, 만약 필요하다면, 요청실패시에, 로직층에서 요청을 다시 보내는 작업을 해야한다.
+
+---
+
+socket channel 또한 발송만하고 응답을 받지 않을수 있다. request 호출시 response 를 쓰지 않으면 된다.
+
+channel:response 는 단방향 패킷받기로 사용할수 있다.
+
+```lua`
 channel:request(req)
 local resp = channel:response(dispatch)
 
--- 等价于
+-- 위아래는 동일하다
 
 local resp = channel:request(req, dispatch)
-request 还有第三个参数 padding ，这是用来将体积巨大的消息拆分成多个包发出用的（如果你的协议支持）。
+```
 
-padding 只可在 session 模式下使用。 padding 需要是一个 table ，里面有若干字符串（每个字符串都应该包含 session 且能被 session 模式的 response 函数解析）。如果提供了 padding 参数，socket channel 将连同 req 以及 padding 数组里的字符串，利用 Socket 的低优先级通道发出（使用 socket.lwrite）。
+---
 
-这种用法下的 response 函数，应该多返回一个 padding 值。即，对于模式一返回 succ:boolean data:string padding:boolean 三个值；对于模式二，返回 session:number succ:boolean data:string padding:boolean 四个值。
+request 는 또한 세번째 파라메터 padding 을 가지고 있다, 이는 엄청난 크기의 메시지를 여러개의 패킷으로 나누어 배포하는데 사용된다 (만약 당신의 프로토콜이 지원한다면)
 
-padding 表明了后续是否还有该长消息的后续部分。
+padding 은 오직 session 모드하에서만 사용된다. padding 은 하나의 table 을 필요로 하며, 테이블 안에는 약간의 문자열이있다(모든 문자열은 모두 session 모드의 response 함수의 디코딩을 거친다). 만약 padding 파라메터를 제공하면, socket channel은 req 와 padding그룹의 문자열, 이용하여 socket 의 저우선순위 채널로 보내진다 (socket.lwrite 사용).
 
-如果回应消息是由多个短小的消息合成。channel:request 将返回一个 table ，里面有所有短消息的内容，由调用者来连接这些短消息。
+이러한 사용법에서 response 함수, 반환값에 padding 값이 추가될것이다, 즉, 모드1반환 succ:boolean data:String padding:boolean 새개의 값, 모드2에대해서 반환값은 session: number succ:boolean data:string padding:boolean 네개의 값.
 
-备用地址
-如果你想在无法连接指定的 ip 地址时，让 channel 尝试连接备用地址，可以创建 channel 对象时，给出 backup 表。这是一个数组，每一项是一个地址。
+padding 은 이후에 메시지의 뒷부분이 더있는지를 표명한다.
 
-它是为 mongo 的集群模式设计的，所以行为和 mongo 的集群连接一致。
+만약응답메시지가 다수의 잛은 메시지의 합성이라면. channel:request 는 하나의 테이블을 반환한다, 안에는 모든 짧은 메시지의 내용이 있고, 호출가가 이 짧은 메시지를 연결해야한다.
 
-过载通知
-如果你在短时间向 channel 推送大量请求，底层可能无法及时发送出去，会积压在内存中，称之为过载。过载发生时，上层逻辑可能需要采取一些措施。例如，暂时不要将请求发送到 C 层；或是合并后续请求，阻止新的请求，等等。
+# 예비주소 
 
-可以通过在创建 channel 对象时传入一个 function overload(isOverload) 在过载发生或缓解时回调。
+만약 연결하고자한 지정한 IP 주소에 연결하지 못할시, channel이 예비주소에 연결을 시도하게 할수 있으며, channel 객체를 생성할때, backup 표를 줄 수 있다. 여기서 한개의 숫자그룹, 각각의 항은 모두 주소이다.
 
-skynet 自带的 redis mongo mysql 等数据库驱动都支持设置过载回调。
+이것은 mongo 의 클러스터 모드의 설계를 위한것이다, 그러니 행위와 mongo 의 클러스터 연결을 동일하다.
 
-关于 socket channel 的具体用法除了阅读 lualib/socketchannel.lua （同时这也是理解 socket 模块的好材料）的实现外，也可以阅读 lualib/redis.lua 和 lualib/mongo.lua 这两个为 skynet 编写的数据库 driver 。
+# 오버로드 통지
 
+만약 짧은 시간내에 channel 을 향해 대량의 푸쉬 요청을 보내면, low층은 즉시 발송을 하지못할수 있다. 메모리에 쌓여질수 있다. 이를 오버로드라 부른다. 오버로드가 발생했을때, 상층로직은 뭔가 조취를 취해야 할것이다. 예를들어, 잠시 요청을 C 로 보내지 않는다던지; 아니면 합친후 계속해서 요청, 새로운 요청 저지 등등.
+
+
+channel 객체를 생성할때 function overload(isOverload) 를 넘겨주어 overload 발생이나 다시 완화될때 조정하도록 할수 있다.
+
+skynet 은 redis, mongo, mysql 등 데이터베이스 기동은 모두 과부하 콜백을 지원한다.
+
+
+socket channel 의 구체사용법은 lualib/socketchannel.lua (동시에 socket 모듈이해에 도움이됨) 의 구현외에, lualib/redis.lua 와 lualib/mongo.lua 이 두개의 skynet 으로 쓰여진 데이터베이스 driver 를 참고하자
+
+
+출처: <https://github.com/cloudwu/skynet/wiki/ExternalService> 

@@ -3,7 +3,7 @@ layout: post
 title: CodeCache
 date: 2022-03-17T13:53:54.026Z
 category: Skynet
-lastmod: 2022-04-09T12:26:49.283Z
+lastmod: 2022-04-09T12:31:20.284Z
 ---
 
 스카이넷은 공식Lua구현을 변형하였다(옵션), 하나의 특성을 추가했다. [여러 개의 Lua VM 이 동일한 함수의 원형을 공유](https://blog.codingnow.com/2014/03/lua_shared_proto.html)할수있다. 동일한 skynet 프로세스중 대량의 lua VM을 기동했을시, 이 특성은 적지않은 메모리의 절약과 VM 시작시간의 향상을 가져온다.
@@ -98,4 +98,7 @@ API 파라메터가 공백이면, 현재 모드를 리턴한다.
 > 
 > 처음하면 캐쉬되고 두번째는 괜찮다는말인가..먼소리인가..기본값이 ON 이면 호출안해도 항상 캐쉬되는거 아니냐?  
 > 
-> 
+
+출처: <https://github.com/cloudwu/skynet/wiki/CodeCache> 
+
+
