@@ -2,7 +2,8 @@
 layout: post
 title: LuaAPI
 date: 2020-01-02 19:20:23 +0900
-category: skynet
+category: Skynet
+lastmod: 2022-04-12T15:07:51.766Z
 ---
 
 skynet framework 기반 개발된 서버는 몇가지 서비스로 구성된다. skynet 을 운영체제로 볼 수 있고, 서비스는 운영체제하의 프로세스로 볼 수 있다. 하지만 실제로는 한 개의 skynet 노드는 하나의 운영체제 프로세스만을 사용하며 서비스간 통신은 프로세스네에서 이루어지기 때문에 일반적인 운영체제 프로세스간 통신보다 훨씬 효율적이다. skynet framework 는 C 언어로 쓰여져 있고 그렇기 때문에 서비스 또한 C 언어로 개발한다. 하지만 framework 는 이미 snlua 라는 c언어로 개발된 서비스 모듈을 제공하여  Lua script 로 업무 로직을 구현할 수 있다. 즉 skynet 에서 다시 말해 skynet 에 임의의 snlua 서비스를 기동할 수 있고, 이것이 상속한 lua snlua 서비스라도 기동할수 있고, 이것이 로딩한 lua 스크립트가 다를 뿐이다. 이렇게 우리는 Lua 만 사용하여 개발 진행을 충분히 할 수 있다.
