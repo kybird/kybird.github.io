@@ -3,33 +3,67 @@ layout: post
 title: ShareData
 date: 2020-01-02 19:20:23 +0900
 category: Skynet
-lastmod: 2022-03-17T14:16:39.578Z
+lastmod: 2022-04-12T15:01:43.403Z
 ---
 
 当你把业务拆分到多个服务中去后，数据如何共享，可能是最易面临的问题。
 
+로직이 여러개의 서비스로 분리되었을때, 데이터를 어떻게 공유할 것인가, 이는 제일 쉽게 마주치는 문제일것이다
+
 最简单粗暴的方法是通过消息传递数据。如果 A 服务需要 B 服务中的数据，可以由 B 服务发送一个消息，将数据打包携带过去。如果是一份数据，很多地方都需要获得它，那么用一个服务装下这组数据，提供一组查询接口即可。DataCenter 模块对此做了简单的封装。
+
+제일 단순 무식한 방법은 메시지를 통해 데이러틀 전달하는 것이다. 만약 A 서비스가 B 서비스내의 데이터가 필요하면, B 서비스는 메시지를 보내서, 이 데이터를 패킹하여 전달한다. 데이터의 경우, 아주 많은곳에서 그데이터를 얻어야 한다면, 하나의 서비스에 이 데이터 그룹을 담아, 검색하는 인터페이스를 제공하면 된다. DataCenter 모듈은 이를 간단하게 패키지화 했다.
+
 
 如果你仅仅需要一组只读的结构信息分享给很多服务（比如一些配置数据），你可以把数据写到一个 lua 文件中，让不同的服务加载它。Cluster 的配置文件就是这样做的。注意：默认 skynet 使用自带的修改版 lua ，会缓存 lua 源文件。当一个 lua 文件通过 loadfile 加载后，磁盘上的修改不会影响下一次加载。所以你需要直接用 io.open 打开文件，再用 load 加载内存中的 string 。
 
-另一个更好的方法是使用 sharetable 模块。
+만약 그저 읽기 전용의 데이터를 여러개의 서비스로 공유할 필요가 있을때(예를들어 설정 데이터), 데이터를 lua 파일에 쓰고, 각각의 서비스가 그파일을 로드하게 할 수 있다. Cluster 의 설정 파일이 바로 이렇게 되어있다. 주의: skynet 이 사용하는 수정된 버전의 lua 는, lua 의 원파일을 캐쉬할 수 있다. lua 파일이 loadfile 을 통해 로딩된후, 디스크상의 수정은 다음 로딩 명령에 영향을 미추지 못한다. 필요하다면 직접 io.open 을 사용하여 문서를 읽고, 다시 load 를 사용하여 메모리내의 string 에 읽어 들여여 한다.
 
-ShareTable
+
+另一个更好的方法是使用 sharetable 模块。
+또다른 더 좋은 방법은 sharetable 모듈의 사용이다.
+
+
+# ShareTable
 Skynet 使用修改过的 Lua 虚拟机，可以直接将一个 table 在不同的虚拟机间共享读取（但不可改变）。这个模块封装了这个特性。
 
+skynet 은 수정된 Lua 가상머신을 사용하며, table 을 각각의 가상머신에서 공유하여 읽을 수 있다(수정은 불가하다). 이 모듈은 이 특성을 패키지화 했다.
+
 sharetable.loadfile(filename, ...) 从一个源文件读取一个共享表，这个文件需要返回一个 table ，这个 table 可以被多个不同的服务读取。... 是传给这个文件的参数。
+sharetable.loadfile(filename, ...) 원본파일에서 공유테이블을 읽어들인다, 이 파일은 table 을 반환 해야 하며, 이 table 은 서로다른 서비스에서 읽어들일수 있다. "..." 는 이 파일에 제공하는 파라메터이다.
+
+
 sharetable.loadstring(filename, source, ...) 和 loadfile 类似，但是是从一个字符串读取。
+sharetable.loadstring(filename, source, ...) 과 loadfile 은 비슷하다, 하지만 문자열에서 읽어 들인다.
+
+
 sharetable.loadtable(filename, tbl) 直接将一个 table 共享。
+sharetable.loadtable(filename, tbl) table 을 직접 공유한다.
+
 sharetable.query(filename) 以 filename 为 key 查找一个被共享的 table 。
+sharetable.query(filename) filename 을 key로하여 공유된 table 을 검색한다.
+
 sharetable.update(filenames) 更新一个或多个 key 。
+sharetable.update(filenames) 한개또는 여러개의 key 를 갱신한다.
+
 sharetable.queryall(filenamelist) 查询多个共享表，若 filenamelist 为 nil，则会查询全部。返回是一个列表。
+sharetable.queryall(filenamelist) 여러개의 공유테이블을 검색하며, filenamelist 가 nil 일경우, 전체 검색한다. 응답값은 테이블이다.
+
 注 1：考虑到性能原因，推荐使用 sharetable.loadfile 创建这个共享表。因为使用 sharetable.loadtable 会经过一次序列化和拷贝，对于太大的表，这个过程非常的耗时。
+
+주 1: 성능을 고려하여, sharetable.loadfile 로 생성한 테이블의 사용을 추천한다. sharetable.loadtable 은 직렬화화 복사를 거치며, 아주 큰 표에 있어, 이 과정은 매우 긴시간을 필요로 한다.
 
 注 2：可以多次 load 同一个 filename 的表，这样的话，对应的 table 会被更新。使用这张表的服务需要调用 update 更新。
 
+주 2: 동일한 filename 의 표를 여러번 load 할수 있으먀, 이럴경우, 대응하는 table 은 갱신된다. 이 표를 사용하는 서비스는 update 를 호출하여 갱신해야 한다.
+
 注 3 ：一张表一旦被 query 一次，其数据的生命期将一直维持调用 query 的该服务退出。目前没有手段主动消除对一张共享表的引用。
+주 3: 표가 일단 query 되면, 이 데이터의 생명주기는 query 를 호출한 서비스가 종료될때 까지 유지된다. 현재는 테이블에 대한 인용을 자발적으로 삭제할 수단이 없다.
 
 以下还有一些过去曾经出现过的类似模块，仅仅因为兼容目的，暂时还在仓库中存在。
+
+아래는 이전에 있었던 비슷한종류의 모듈이다, 호환성을위함이며, 잠시 라이브러리중에 존재한다.
+
 
 ShareData
 当大量的服务可能需要共享一大块并不太需要更新的结构化数据，每个服务却只使用其中一小部分。你可以设想成，这些数据在开发时就放在一个数据仓库中，各个服务按需要检索出需要的部分。
