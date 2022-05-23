@@ -3,7 +3,7 @@ layout: post
 title: GateServer
 date: 2022-03-17T13:53:54.026Z
 category: Skynet
-lastmod: 2022-03-25T15:46:56.800Z
+lastmod: 2022-05-23T03:23:02.370Z
 ---
 
 # GateServer
@@ -99,13 +99,8 @@ gateserver.closeclient(fd) -- close fd
 
 모든 패키지는 2개바이트 + 데이터 내용이다.  이 2바이트는 Big-Endian 인코딩되있다. 데이터내용의 크기는 임의이다.  
 
-> 所以，单个数据包最长不能超过 65535 字节。如果业务层需要传输更大的数据块，请在上层业务协议中解决。 
-> So, every single data package cannot exceed 65535 bytes. If you need to transfer a large data package, please resolve it in in the feature layer.  
-> 중문번역: 그래서, 단일한 데이터 패키지의 최장 길이는 65535 바이트를 넘지 못한다. 만약 로직층이 더 큰데이터 조각의 전송이 필요하다면, 상층 로직 프로토콜에서 해결하라.  
-> 영문번역: 그래서 모든 싱글 데이터 패키지는 65535 바이트를 넘을 수 없다. 만약 큰 데이터 패키지의 전송이 필요하다면, 기능 레이어에서 해결하라.  
-> > 역주 번역불가.   
-> ??? 로직층에서 하라는건지 그위층에서 하라는건지 모르겠다 그위층은 어디인가?  
-> 영어는 기능층이라는데 기능층이 로직층인가?  
+이로인해 단일 패킷의 최대크기는 65535바이트보다 클수 없다. 작업층에서 더 큰 데이터 조각의 전송이 필요하다면 상위 작업층에서 해결하라
+역주: 로직에서 해결하란건지, 프레임워크를 뜯어고치라는건지 모르겠다. 일반적으로는 프레임워크 안건들이고 필요한곳에서 수정하기는 하는데..
 
 스카이넷은 데이터 디코딩 처리를 위해 netpack 라이브러리를 제공한다. 위치는 Lua-netpack.c 이다. netpack  은 package 포맷에 의거하여 unpack 처리한다. netpack.filter(queue, msg, size) API, 는 타입값("data", "more", "error", "open", "close")을 반환한다. 이것은 IO 이벤트를 대표한다, 그외의 반환값들은 각 이벤트에 필요한 파라메터들이다.  
 
